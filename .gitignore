@@ -1,0 +1,7 @@
+lavato
+.env
+credentials.json
+token.json
+assets/assets.go
+private/*.go
+regus.db

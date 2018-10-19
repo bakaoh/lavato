@@ -1,0 +1,21 @@
+.regus-avatar {
+    background-size: auto 140px;
+    background-position: 95px 126px;
+}
+.regus-box {
+    margin-bottom: 0px;
+}
+.battle-info {
+    font-size: 14px;
+}
+.progress-description {
+    font-weight: bolder;
+}
+.text-light {
+    color: #a5fbff;
+}
+.main-footer {
+    background: none !important;
+    color: #cbcbcb !important;
+    border-top: 0px !important;
+}
