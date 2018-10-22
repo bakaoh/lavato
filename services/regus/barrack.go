@@ -32,7 +32,17 @@ type Paladin struct {
 type BattleResponse struct {
 	Symbol   string  `json:"symbol,omitempty"`
 	Duration int64   `json:"duration,omitempty"`
+	OutDate  int64   `json:"outdate,omitempty"`
 	Percent  float64 `json:"percent,omitempty"`
+}
+
+// BattleSort implements sort.Interface for []BattleResponse based on the out date field.
+type BattleSort []BattleResponse
+
+func (a BattleSort) Len() int      { return len(a) }
+func (a BattleSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a BattleSort) Less(i, j int) bool {
+	return a[i].OutDate > a[j].OutDate
 }
 
 // PaladinResponse ...
@@ -166,10 +176,12 @@ func getBattleLogs(battles []Battle, orders map[int64]bin.GetOrderResponse, pala
 		}
 		log := BattleResponse{
 			Symbol:   inOrder.Symbol,
+			OutDate:  outOrder.UpdateTime,
 			Duration: outOrder.UpdateTime - inOrder.Time,
 			Percent:  (to - from) * 100 / from,
 		}
-		logs = append([]BattleResponse{log}, logs...)
+		logs = append(logs, log)
 	}
+	sort.Sort(BattleSort(logs))
 	return
 }

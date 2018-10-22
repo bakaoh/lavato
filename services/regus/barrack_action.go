@@ -75,6 +75,9 @@ func (b *Barrack) getUpToDateOrder(ctx context.Context, orderID int64) (*bin.Get
 	if err != nil {
 		return nil, errors.Wrapf(err, "storage load order %d error", orderID)
 	}
+	if order.Status == "FILLED" {
+		return order, nil
+	}
 	order, err = b.binance.GetOrder(order.Symbol, orderID)
 	if err != nil {
 		return nil, errors.Wrapf(err, "binance get order %d error", orderID)

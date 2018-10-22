@@ -44,7 +44,7 @@ var paladins = map[string]*regus.Paladin{
 
 func TestMain(m *testing.M) {
 
-	testStorage, _ = regus.NewStorage("regus.db")
+	testStorage, _ = regus.NewStorage("../../regus.db")
 	testClient, _ = binance.NewClient(
 		private.BinanceApiKey,
 		private.BinanceSecretKey,
@@ -53,6 +53,19 @@ func TestMain(m *testing.M) {
 	defer testStorage.Close()
 
 	os.Exit(m.Run())
+}
+
+func TestFixEarlyOrderBug(t *testing.T) {
+	t.Skip()
+	order, _ := testStorage.LoadOrder(context.Background(), 12922585)
+	order.OrigQty = "2363.00000000"
+	order.ExecutedQty = "2363.00000000"
+	testStorage.SaveOrder(context.Background(), order)
+
+	order, _ = testStorage.LoadOrder(context.Background(), 19528121)
+	order.OrigQty = "147.42000000"
+	order.ExecutedQty = "147.42000000"
+	testStorage.SaveOrder(context.Background(), order)
 }
 
 func TestEvent_STRATEGIST(t *testing.T) {
