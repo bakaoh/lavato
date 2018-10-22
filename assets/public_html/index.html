@@ -70,7 +70,7 @@
                                             </span>
                                         </span>
                                         <div class="progress">
-                                            <div class="progress-bar" v-bind:style="'width: ' + paladin.change + '%'"></div>
+                                            <div class="progress-bar" v-bind:style="'width: ' + Math.abs(paladin.change) + '%'"></div>
                                         </div>
                                         <span class="progress-description">
                                             <i class="fa fa-fw fa-heart"></i> {{ paladin.rawhp }} 
@@ -135,7 +135,7 @@
                                                 <tr v-for="battle in paladin.logs">
                                                     <td>{{ formatSymbol(battle.symbol) }}</td>
                                                     <td>{{ formatDuration(battle.duration) }}</td>
-                                                    <td style="width: 40px">
+                                                    <td style="width: 40px; text-align: right;">
                                                         <span v-bind:class="{ 'bg-red': (battle.percent < 0), 'bg-aqua': (battle.percent >= 0) }" class="badge">
                                                             {{ battle.percent.toFixed(2) }}%
                                                         </span>

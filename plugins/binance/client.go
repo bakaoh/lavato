@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -27,6 +28,7 @@ type Client struct {
 	apiKey      string
 	secretKey   string
 	rateLimited time.Time
+	diffTime    time.Duration
 }
 
 // ErrorResponse ...
@@ -47,6 +49,7 @@ func NewClient(apiKey, secretKey string) (*Client, error) {
 		httpClient: utils.CreateClient(),
 		apiKey:     apiKey,
 		secretKey:  secretKey,
+		diffTime:   0,
 	}, nil
 }
 
@@ -111,12 +114,29 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*htt
 		}
 		errRes := &ErrorResponse{}
 		err = json.NewDecoder(resp.Body).Decode(errRes)
+		if errRes.Code == -1021 {
+			c.updateDiffTime()
+		}
 		err = fmt.Errorf("status %d, code %d, msg %s", resp.StatusCode, errRes.Code, errRes.Msg)
 	} else {
 		err = json.NewDecoder(resp.Body).Decode(v)
 	}
 	io.Copy(ioutil.Discard, resp.Body)
 	return resp, err
+}
+
+func (c *Client) now() time.Time {
+	return time.Now().Add(c.diffTime)
+}
+
+func (c *Client) updateDiffTime() {
+	serverTime, err := c.Time()
+	if err != nil {
+		log.Println("Update diff time error", err)
+		return
+	}
+	c.diffTime = time.Now().Sub(time.Unix(0, serverTime.ServerTime*int64(time.Millisecond)))
+	log.Println("Update diff time ok", c.diffTime)
 }
 
 func (c *Client) dump(ctx context.Context, req *http.Request) (*http.Response, error) {

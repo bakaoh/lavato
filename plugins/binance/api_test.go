@@ -38,6 +38,13 @@ func TestExchangeInfo(t *testing.T) {
 	fmt.Println(infos)
 }
 
+func TestTime(t *testing.T) {
+	serverTime, err := client.Time()
+	assert.Nil(t, err)
+
+	fmt.Println(serverTime.ServerTime)
+}
+
 func TestAllOrders(t *testing.T) {
 	orders, err := client.AllOrders("IOTXETH")
 	assert.Nil(t, err)

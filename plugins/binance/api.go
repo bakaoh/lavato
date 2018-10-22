@@ -270,3 +270,23 @@ func (c *Client) ExchangeInfo() (*ExchangeInfoResponse, error) {
 	}
 	return &rs, nil
 }
+
+// TimeResponse return from Time request
+type TimeResponse struct {
+	ServerTime int64 `json:"serverTime,omitempty"`
+}
+
+// Time ...
+func (c *Client) Time() (*TimeResponse, error) {
+	req, err := c.newRequest("GET", "/api/v1/time", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var rs TimeResponse
+	_, err = c.do(context.Background(), req, &rs)
+	if err != nil {
+		return nil, err
+	}
+	return &rs, nil
+}
