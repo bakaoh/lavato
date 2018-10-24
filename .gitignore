@@ -5,3 +5,4 @@ token.json
 assets/assets.go
 private/*.go
 regus.db
+Todo.md

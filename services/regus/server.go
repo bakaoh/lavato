@@ -63,6 +63,7 @@ func (s *Server) Run(addr string) error {
 	})
 	http.HandleFunc("/regus/paladins", s.paladins)
 	http.HandleFunc("/regus/action", s.action)
+	http.HandleFunc("/regus/action/info", s.actionInfo)
 	http.HandleFunc("/regus/ws", s.ws)
 	http.Handle("/lavato/", http.StripPrefix("/lavato/", fileServer))
 
@@ -82,16 +83,20 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+func responseJSON(w *http.ResponseWriter, data interface{}) {
+	rs, err := json.Marshal(data)
+	if err != nil {
+		http.Error(*w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	(*w).WriteHeader(http.StatusOK)
+	(*w).Write(rs)
+}
+
 func (s *Server) paladins(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	w.Header().Add("Content-Type", "application/json")
-	paladins, err := json.Marshal(s.barrack.GetPaladins(context.Background()))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(paladins)
+	responseJSON(&w, s.barrack.GetPaladins(context.Background()))
 }
 
 func (s *Server) action(w http.ResponseWriter, r *http.Request) {
@@ -100,19 +105,26 @@ func (s *Server) action(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	symbol := r.URL.Query().Get("symbol")
 	act := r.URL.Query().Get("act")
-	err := s.barrack.Action(context.Background(), id, symbol, act)
-	if err != nil {
+	if err := s.barrack.Action(context.Background(), id, symbol, act); err != nil {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		responseJSON(&w, s.barrack.GetPaladins(context.Background()))
 	}
-	paladins, err := json.Marshal(s.barrack.GetPaladins(context.Background()))
-	if err != nil {
+}
+
+func (s *Server) actionInfo(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	w.Header().Add("Content-Type", "application/json")
+	id := r.URL.Query().Get("id")
+	symbol := r.URL.Query().Get("symbol")
+	act := r.URL.Query().Get("act")
+	if info, err := s.barrack.ActionInfo(context.Background(), id, symbol, act); err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		responseJSON(&w, info)
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(paladins)
 }
 
 func (s *Server) ws(w http.ResponseWriter, r *http.Request) {

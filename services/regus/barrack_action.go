@@ -5,13 +5,88 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	bin "github.com/bakaoh/lavato/plugins/binance"
 	"github.com/pkg/errors"
 )
 
+// ActionInfoResponse ...
+type ActionInfoResponse struct {
+	Msg string `json:"msg,omitempty"`
+}
+
+func (i *ActionInfoResponse) prepend(s string) *ActionInfoResponse {
+	i.Msg = fmt.Sprintf("%s<br/>%s", s, i.Msg)
+	return i
+}
+
+func (i *ActionInfoResponse) append(k, v string) *ActionInfoResponse {
+	i.Msg += fmt.Sprintf("<b>%s:</b> %s <br/>", k, v)
+	return i
+}
+
+// ActionInfo ...
+func (b *Barrack) ActionInfo(ctx context.Context, id, symbol, act string) (*ActionInfoResponse, error) {
+	symbol = strings.ToUpper(symbol) + "ETH"
+	paladin, err := b.storage.LoadPaladin(ctx, id)
+	if err != nil {
+		return nil, errors.Wrapf(err, "paladin %s not found", id)
+	}
+	var inOrder, outOrder *bin.GetOrderResponse
+	info := &ActionInfoResponse{}
+	if paladin.InID > 0 {
+		inOrder, err = b.storage.LoadOrder(context.Background(), paladin.InID)
+		if err != nil {
+			return nil, errors.Wrapf(err, "storage load order %d error", paladin.OutID)
+		}
+		info.append("Symbol", inOrder.Symbol)
+		info.append("Current price", b.provider.GetPrice(inOrder.Symbol))
+		info.append("Buy price", inOrder.Price)
+		info.append("Buy date", time.Unix(inOrder.Time/1000, 0).String())
+	}
+	if paladin.OutID > 0 {
+		outOrder, err = b.storage.LoadOrder(context.Background(), paladin.OutID)
+		if err != nil {
+			return nil, errors.Wrapf(err, "storage load order %d error", paladin.OutID)
+		}
+		info.append("Target price", outOrder.Price)
+		info.append("Sell date", time.Unix(outOrder.Time/1000, 0).String())
+	}
+
+	switch act {
+	case "cancel":
+		if paladin.OutID > 0 {
+			info.prepend("Cancel selling")
+		} else if paladin.InID > 0 {
+			info.prepend("Cancel buying")
+		}
+		return info, nil
+	case "attack":
+		info.append("Symbol", symbol)
+		info.append("Current price", b.provider.GetPrice(symbol))
+		return info.prepend("<b>Attack</b> open position"), nil
+	case "hit":
+		target, err := b.increasePriceString(inOrder.Price, 5, inOrder.Symbol)
+		info.append("Target price", target)
+		return info.prepend("<b>Hit</b> set target at 5%"), err
+	case "strike":
+		target, err := b.increasePriceString(inOrder.Price, 15, inOrder.Symbol)
+		info.append("Target price", target)
+		return info.prepend("<b>Strike</b> set target at 15%"), err
+	case "bash":
+		target, err := b.increasePriceString(inOrder.Price, 25, inOrder.Symbol)
+		info.append("Target price", target)
+		return info.prepend("<b>Bash</b> set target at 25%"), err
+	case "defend":
+		return info.prepend("<b>Defend</b> close position"), nil
+	}
+	return nil, fmt.Errorf("invalid action %s", act)
+}
+
 // Action ...
 func (b *Barrack) Action(ctx context.Context, id, symbol, act string) error {
+	symbol = strings.ToUpper(symbol) + "ETH"
 	paladin, err := b.storage.LoadPaladin(ctx, id)
 	if err != nil {
 		return errors.Wrapf(err, "paladin %s not found", id)
@@ -44,7 +119,7 @@ func (b *Barrack) Action(ctx context.Context, id, symbol, act string) error {
 	case "defend":
 		return b.setTarget(ctx, paladin, -100)
 	}
-	return nil
+	return fmt.Errorf("invalid action %s", act)
 }
 
 func (b *Barrack) cancelOrder(ctx context.Context, orderID int64) error {
@@ -90,7 +165,6 @@ func (b *Barrack) buySymbol(ctx context.Context, paladin *Paladin, symbol string
 		return errors.New("paladin is attacking")
 	}
 
-	symbol = strings.ToUpper(symbol) + "ETH"
 	priceStr := b.provider.GetPrice(symbol)
 	price, err := strconv.ParseFloat(priceStr, 64)
 	if err != nil {
@@ -137,13 +211,11 @@ func (b *Barrack) setTarget(ctx context.Context, paladin *Paladin, percent int) 
 	if percent == -100 {
 		sell, err = b.binance.SellMarket(inOrder.Symbol, inOrder.ExecutedQty)
 	} else {
-		price, err := strconv.ParseFloat(inOrder.Price, 64)
+		price, err := b.increasePriceString(inOrder.Price, percent, inOrder.Symbol)
 		if err != nil {
-			return errors.Wrapf(err, "can not parse price %s", inOrder.Price)
+			return err
 		}
-		price = price * float64(100+percent) / 100
-		tickSize := fmt.Sprintf("%d", b.provider.GetTickSize(inOrder.Symbol))
-		sell, err = b.binance.SellLimit(inOrder.Symbol, inOrder.ExecutedQty, fmt.Sprintf("%."+tickSize+"f", price))
+		sell, err = b.binance.SellLimit(inOrder.Symbol, inOrder.ExecutedQty, price)
 	}
 	if err != nil || sell == nil || sell.OrderID <= 0 {
 		return errors.Wrapf(err, "sell order err")
@@ -160,4 +232,14 @@ func (b *Barrack) setTarget(ctx context.Context, paladin *Paladin, percent int) 
 	b.storage.SaveOrder(context.Background(), outOrder)
 
 	return nil
+}
+
+func (b *Barrack) increasePriceString(priceStr string, percent int, symbol string) (string, error) {
+	price, err := strconv.ParseFloat(priceStr, 64)
+	if err != nil {
+		return "", errors.Wrapf(err, "can not parse price %s", priceStr)
+	}
+	price = price * float64(100+percent) / 100
+	tickSize := fmt.Sprintf("%d", b.provider.GetTickSize(symbol))
+	return fmt.Sprintf("%."+tickSize+"f", price), nil
 }

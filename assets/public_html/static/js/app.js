@@ -43,9 +43,26 @@ var app = new Vue({
       return this.formatDuration(new Date().getTime() - fromMilis);
     },
     action: function (id, act) {
-      app.pendingAct = [id, act];
-      $('#modal-primary-body').html(act);
-      $('#modal-primary').modal();
+      app.loading = true;
+      var request = $.ajax({
+        url: "http://" + host + "/regus/action/info",
+        type: 'GET',
+        data: { id: id, act : act, symbol: $("#action-symbol-" + id).val() } ,
+        contentType: 'application/json; charset=utf-8'
+      });
+      
+      request.done(function(data) {
+        app.pendingAct = [id, act];
+        app.loading = false;
+        $('#modal-primary-body').html(data.msg);
+        $('#modal-primary').modal();
+      });
+
+      request.fail(function(jqXHR, textStatus) {
+        app.loading = false;
+        $('#modal-primary-body').html(jqXHR.responseText);
+        $('#modal-primary').modal();
+      });
     },
     processAction: function () {
       if (app.pendingAct.length != 2) {

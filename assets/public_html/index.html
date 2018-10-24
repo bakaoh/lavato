@@ -85,14 +85,14 @@
                                         <div class="input-group" v-if="paladin.instatus && paladin.instatus == 'NEW'">
                                             <span class="input-group-btn">
                                                 <button v-on:click="action(paladin.id, 'cancel')" type="button" class="btn btn-block btn-warning btn-flat">
-                                                    Cancel Buy At {{ paladin.inprice }} (Current {{ paladin.curprice }})
+                                                    Cancel Attack
                                                 </button>
                                             </span>
                                         </div>
                                         <div class="input-group" v-if="paladin.outstatus && paladin.outstatus == 'NEW'">
                                             <span class="input-group-btn">
                                                 <button v-on:click="action(paladin.id, 'cancel')" type="button" class="btn btn-block btn-warning btn-flat">
-                                                    Cancel Target At {{ paladin.outprice }} (Buy At {{ paladin.inprice }})
+                                                    Cancel Strike / Defend
                                                 </button>
                                             </span>
                                         </div>
@@ -108,7 +108,7 @@
                                                 <button v-on:click="action(paladin.id, 'flash')" type="button" class="btn btn-block btn-info btn-flat">Flash</button>
                                             </span> -->
                                         </div>
-                                        <div class="input-group" v-if="paladin.symbol && !paladin.outstatus">
+                                        <div class="input-group" v-if="paladin.symbol && paladin.outstatus != 'NEW' && !paladin.outstatus">
                                             <!-- <span class="input-group-btn">
                                                 <button v-on:click="action(paladin.id, 'guard')" type="button" class="btn btn-block btn-warning btn-flat">
                                                     Guard
