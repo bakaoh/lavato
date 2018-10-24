@@ -33,17 +33,15 @@ func (b *Barrack) Action(ctx context.Context, id, symbol, act string) error {
 			paladin.InID = 0
 		}
 		b.storage.SavePaladin(context.Background(), paladin)
-	case "atk":
+	case "attack":
 		return b.buySymbol(ctx, paladin, symbol)
-	case "quick":
-	case "flash":
-	case "target_5":
+	case "hit":
 		return b.setTarget(ctx, paladin, 5)
-	case "target_10":
-		return b.setTarget(ctx, paladin, 10)
-	case "target_20":
-		return b.setTarget(ctx, paladin, 20)
-	case "def":
+	case "strike":
+		return b.setTarget(ctx, paladin, 15)
+	case "bash":
+		return b.setTarget(ctx, paladin, 25)
+	case "defend":
 		return b.setTarget(ctx, paladin, -100)
 	}
 	return nil

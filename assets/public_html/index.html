@@ -99,7 +99,7 @@
                                         <div class="input-group" v-if="!paladin.symbol && !paladin.instatus">
                                             <input type="text" class="form-control" v-bind:id="'action-symbol-' + paladin.id">
                                             <span class="input-group-btn">
-                                                <button v-on:click="action(paladin.id, 'atk')" type="button" class="btn btn-block btn-info btn-flat">Atk</button>
+                                                <button v-on:click="action(paladin.id, 'attack')" type="button" class="btn btn-block btn-info btn-flat">Attack</button>
                                             </span>
                                             <!-- <span class="input-group-btn">
                                                 <button v-on:click="action(paladin.id, 'quick')" type="button" class="btn btn-block btn-info btn-flat">Quick</button>
@@ -109,20 +109,30 @@
                                             </span> -->
                                         </div>
                                         <div class="input-group" v-if="paladin.symbol && !paladin.outstatus">
+                                            <!-- <span class="input-group-btn">
+                                                <button v-on:click="action(paladin.id, 'guard')" type="button" class="btn btn-block btn-warning btn-flat">
+                                                    Guard
+                                                </button>
+                                            </span> -->
                                             <span class="input-group-btn">
-                                                <button v-on:click="action(paladin.id, 'def')" type="button" class="btn btn-block btn-warning btn-flat">Def</button>
+                                                <button v-on:click="action(paladin.id, 'defend')" type="button" class="btn btn-block btn-warning btn-flat">
+                                                    Defend
+                                                </button>
                                             </span>
                                             <span class="input-group-btn">
-                                                <button v-on:click="action(paladin.id, 'target_5')" type="button" class="btn btn-block btn-info btn-flat">
-                                                    Target 5</button>
+                                                <button v-on:click="action(paladin.id, 'hit')" type="button" class="btn btn-block btn-info btn-flat">
+                                                    Hit
+                                                </button>
                                             </span>
                                             <span class="input-group-btn">
-                                                <button v-on:click="action(paladin.id, 'target_10')" type="button" class="btn btn-block btn-info btn-flat">
-                                                    Target 10</button>
+                                                <button v-on:click="action(paladin.id, 'strike')" type="button" class="btn btn-block btn-info btn-flat">
+                                                    Strike
+                                                </button>
                                             </span>
                                             <span class="input-group-btn">
-                                                <button v-on:click="action(paladin.id, 'target_20')" type="button" class="btn btn-block btn-info btn-flat">
-                                                    Target 20</button>
+                                                <button v-on:click="action(paladin.id, 'bash')" type="button" class="btn btn-block btn-info btn-flat">
+                                                    Bash
+                                                </button>
                                             </span>
                                         </div>
                                         <table v-if="paladin.logs" class="table table-striped">
