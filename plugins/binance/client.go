@@ -125,8 +125,8 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	return resp, err
 }
 
-func (c *Client) now() time.Time {
-	return time.Now().Add(c.diffTime)
+func (c *Client) ts() int64 {
+	return time.Now().Add(c.diffTime).UnixNano() / int64(time.Millisecond)
 }
 
 func (c *Client) updateDiffTime() {
@@ -135,7 +135,7 @@ func (c *Client) updateDiffTime() {
 		log.Println("Update diff time error", err)
 		return
 	}
-	c.diffTime = time.Now().Sub(time.Unix(0, serverTime.ServerTime*int64(time.Millisecond)))
+	c.diffTime = time.Unix(0, serverTime.ServerTime*int64(time.Millisecond)).Sub(time.Now())
 	log.Println("Update diff time ok", c.diffTime)
 }
 

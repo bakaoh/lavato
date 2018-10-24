@@ -2,7 +2,6 @@ package binance
 
 import (
 	"context"
-	"time"
 )
 
 // SymbolRequest is request with symbol field
@@ -62,7 +61,7 @@ type GetOrderResponse struct {
 
 // AllOrders ...
 func (c *Client) AllOrders(symbol string) ([]GetOrderResponse, error) {
-	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	timestamp := c.ts()
 	req, err := c.newSignedRequest("GET", "/api/v3/allOrders", SymbolRequest{symbol, timestamp})
 	if err != nil {
 		return nil, err
@@ -78,7 +77,7 @@ func (c *Client) AllOrders(symbol string) ([]GetOrderResponse, error) {
 
 // GetOrder ...
 func (c *Client) GetOrder(symbol string, orderID int64) (*GetOrderResponse, error) {
-	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	timestamp := c.ts()
 	req, err := c.newSignedRequest("GET", "/api/v3/order", GetOrderRequest{symbol, orderID, "", 0, timestamp})
 	if err != nil {
 		return nil, err
@@ -135,7 +134,7 @@ type PostOrderResponse struct {
 
 // PostOrder ...
 func (c *Client) PostOrder(order PostOrderRequest) (*PostOrderResponse, error) {
-	order.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
+	order.Timestamp = c.ts()
 	req, err := c.newSignedRequest("POST", "/api/v3/order", order)
 	if err != nil {
 		return nil, err
@@ -213,7 +212,7 @@ type DeleteOrderResponse struct {
 
 // DeleteOrder ...
 func (c *Client) DeleteOrder(symbol string, orderID int64) (*DeleteOrderResponse, error) {
-	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+	timestamp := c.ts()
 	req, err := c.newSignedRequest("DELETE", "/api/v3/order", DeleteOrderRequest{symbol, orderID, "", "", 0, timestamp})
 	if err != nil {
 		return nil, err
