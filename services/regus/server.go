@@ -69,7 +69,7 @@ func (s *Server) Run(addr string) error {
 
 	browser, err := gobroem.NewAPI(viper.GetString("regus.db"))
 	if err == nil {
-		http.Handle("/regus/browser/", browser.Handler("/regus/browser/"))
+		http.Handle("/regus/browser/", browser.Handler("/regus/browser/", "/regus/browser/"))
 	}
 
 	go s.provider.Run()

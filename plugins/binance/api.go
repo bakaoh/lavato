@@ -170,6 +170,17 @@ func (c *Client) SellLimit(symbol string, quantity string, price string) (*PostO
 	})
 }
 
+// SellTakeProfit ...
+func (c *Client) SellTakeProfit(symbol string, quantity string, stopPrice string) (*PostOrderResponse, error) {
+	return c.PostOrder(PostOrderRequest{
+		Symbol:    symbol,
+		Type:      "TAKE_PROFIT",
+		Side:      "SELL",
+		Quantity:  quantity,
+		StopPrice: stopPrice,
+	})
+}
+
 // BuyMarket ...
 func (c *Client) BuyMarket(symbol string, quantity string) (*PostOrderResponse, error) {
 	return c.PostOrder(PostOrderRequest{

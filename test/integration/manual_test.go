@@ -55,17 +55,11 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestFixEarlyOrderBug(t *testing.T) {
+func TestFixBug(t *testing.T) {
 	t.Skip()
-	order, _ := testStorage.LoadOrder(context.Background(), 12922585)
-	order.OrigQty = "2363.00000000"
-	order.ExecutedQty = "2363.00000000"
-	testStorage.SaveOrder(context.Background(), order)
-
-	order, _ = testStorage.LoadOrder(context.Background(), 19528121)
-	order.OrigQty = "147.42000000"
-	order.ExecutedQty = "147.42000000"
-	testStorage.SaveOrder(context.Background(), order)
+	paladin, _ := testStorage.LoadPaladin(context.Background(), "0295")
+	paladin.OutID = 0
+	testStorage.SavePaladin(context.Background(), paladin)
 }
 
 func TestEvent_STRATEGIST(t *testing.T) {

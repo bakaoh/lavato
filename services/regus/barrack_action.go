@@ -38,7 +38,7 @@ func (b *Barrack) ActionInfo(ctx context.Context, id, symbol, act string) (*Acti
 	if paladin.InID > 0 {
 		inOrder, err = b.storage.LoadOrder(context.Background(), paladin.InID)
 		if err != nil {
-			return nil, errors.Wrapf(err, "storage load order %d error", paladin.OutID)
+			return nil, errors.Wrapf(err, "storage load order %d error", paladin.InID)
 		}
 		info.append("Symbol", inOrder.Symbol)
 		info.append("Current price", b.provider.GetPrice(inOrder.Symbol))
@@ -215,7 +215,12 @@ func (b *Barrack) setTarget(ctx context.Context, paladin *Paladin, percent int) 
 		if err != nil {
 			return err
 		}
-		sell, err = b.binance.SellLimit(inOrder.Symbol, inOrder.ExecutedQty, price)
+		if b.lessthanPriceString(price, b.provider.GetPrice(inOrder.Symbol)) {
+			// current price is greater than target price, use take profit
+			sell, err = b.binance.SellTakeProfit(inOrder.Symbol, inOrder.ExecutedQty, price)
+		} else {
+			sell, err = b.binance.SellLimit(inOrder.Symbol, inOrder.ExecutedQty, price)
+		}
 	}
 	if err != nil || sell == nil || sell.OrderID <= 0 {
 		return errors.Wrapf(err, "sell order err")
@@ -242,4 +247,16 @@ func (b *Barrack) increasePriceString(priceStr string, percent int, symbol strin
 	price = price * float64(100+percent) / 100
 	tickSize := fmt.Sprintf("%d", b.provider.GetTickSize(symbol))
 	return fmt.Sprintf("%."+tickSize+"f", price), nil
+}
+
+func (b *Barrack) lessthanPriceString(priceStr1 string, priceStr2 string) bool {
+	price1, err := strconv.ParseFloat(priceStr1, 64)
+	if err != nil {
+		return true
+	}
+	price2, err := strconv.ParseFloat(priceStr2, 64)
+	if err != nil {
+		return true
+	}
+	return price1 < price2
 }
