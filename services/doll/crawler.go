@@ -27,7 +27,7 @@ type Crawler struct {
 func NewCrawler(bitfinex *bfn.Client, symbol string) *Crawler {
 	return &Crawler{
 		symbol,
-		time.NewTicker(1 * time.Minute),
+		time.NewTicker(15 * time.Second),
 		bitfinex,
 		db.NewMMapDb(symbol + ".pdb"),
 		db.NewMMapDb(symbol + ".vdb"),
@@ -74,12 +74,12 @@ func (t *Crawler) Stop() {
 func (t *Crawler) onTicker() {
 	tick, err := t.bitfinex.Ticker(t.symbol)
 	if err == nil {
-		i := minuteFromBegin(tick.Ts) * 4
-		binary.LittleEndian.PutUint32(t.priceDb.Data[i:], uint32(tick.Last)*100)
-		binary.LittleEndian.PutUint32(t.volumeDb.Data[i:], uint32(tick.Last)*10000)
+		i := minuteFromBegin(int64(tick.Ts)) * 4
+		binary.LittleEndian.PutUint32(t.priceDb.Data[i:], uint32(tick.Last*100))
+		binary.LittleEndian.PutUint32(t.volumeDb.Data[i:], uint32(tick.Last*10000))
 	}
 }
 
-func minuteFromBegin(ts float64) int {
-	return int((ts - 1546300800) / 60)
+func minuteFromBegin(ts int64) int {
+	return int((ts - beginTs) / 60)
 }

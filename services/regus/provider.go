@@ -1,9 +1,11 @@
 package regus
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	bin "github.com/bakaoh/lavato/plugins/binance"
@@ -69,8 +71,27 @@ func (t *Provider) getPrices() {
 	prices, err := t.binance.TickerPrice()
 	if err == nil {
 		for _, price := range prices {
+			t.check(t.prices[price.Symbol], price.Price, price.Symbol)
 			t.prices[price.Symbol] = price.Price
 		}
+	}
+}
+
+func (t *Provider) check(prev, curr, symbol string) {
+	if !strings.HasSuffix(symbol, "ETH") {
+		return
+	}
+
+	prevPrice, _ := strconv.ParseFloat(prev, 64)
+	currPrice, _ := strconv.ParseFloat(curr, 64)
+	if prevPrice > 0 && (currPrice-prevPrice)/prevPrice > 0.01 {
+		fmt.Printf("%s: %s %s => %s (%f) \n",
+			time.Now().String()[:19],
+			symbol,
+			prev,
+			curr,
+			(currPrice-prevPrice)*100/prevPrice,
+		)
 	}
 }
 

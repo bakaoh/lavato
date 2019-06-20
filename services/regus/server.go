@@ -9,7 +9,9 @@ import (
 
 	"github.com/bakaoh/lavato/assets"
 	bin "github.com/bakaoh/lavato/plugins/binance"
+	bfn "github.com/bakaoh/lavato/plugins/bitfinex"
 	"github.com/bakaoh/lavato/private"
+	"github.com/bakaoh/lavato/services/doll"
 	"github.com/bakaoh/sqlite-gobroem/gobroem"
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
@@ -22,6 +24,7 @@ type Server struct {
 	provider *Provider
 	storage  *Storage
 	barrack  *Barrack
+	crawler  *doll.Crawler
 }
 
 // NewServer creates a new ws.Server
@@ -41,6 +44,12 @@ func NewServer() *Server {
 	provider := NewProvider(binance)
 	barrack := NewBarrack(binance, provider, storage)
 
+	bitfinex, err := bfn.NewClient("", "")
+	if err != nil {
+		log.Fatal("can not connect Binance: ", err)
+	}
+	crawler := doll.NewCrawler(bitfinex, "ethusd")
+
 	return &Server{
 		binance:  binance,
 		provider: provider,
@@ -51,6 +60,7 @@ func NewServer() *Server {
 				return true
 			},
 		},
+		crawler: crawler,
 	}
 }
 
@@ -73,6 +83,8 @@ func (s *Server) Run(addr string) error {
 	}
 
 	go s.provider.Run()
+	go s.crawler.Run()
+	defer s.crawler.Stop()
 	defer s.provider.Stop()
 	defer s.storage.Close()
 

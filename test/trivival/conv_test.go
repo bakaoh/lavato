@@ -33,3 +33,7 @@ func TestInteval(t *testing.T) {
 		}
 	}
 }
+
+func TestPrintDate(t *testing.T) {
+	fmt.Printf("%s", time.Now().String()[:19])
+}
